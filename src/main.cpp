@@ -145,14 +145,21 @@ int main()
           auto msg = "42[\"estimate_marker\"," + msgJson.dump() + "]";
           // std::cout << msg << std::endl;q
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
+
+          /*------------------------output history--------------------------------*/
+          // 1: time_stamp
           out_file << ukf.time_us_ << ",";
-          out_file << p_x << "," << p_y << ",";
-          out_file << yaw << "," << RMSE(0) << "," << RMSE(1) << "," << RMSE(2) << "," << RMSE(3) << ",";
+          // 2: px, 3: py, 4: yaw
+          out_file << p_x << "," << p_y << "," << yaw << "," ;
+          // 5:rmse_x, 6:rmse_y, 7:rmse_vx, 8:rmse_vy
+          out_file << RMSE(0) << "," << RMSE(1) << "," << RMSE(2) << "," << RMSE(3) << ",";
+          // 9: NIS
           if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
             out_file << ukf.NIS_laser_ << "\n";
           } else if (meas_package.sensor_type_ == MeasurementPackage::RADAR) {
             out_file << ukf.NIS_radar_ << "\n";
           }
+          /*----------------------------------------------------------------------*/
         }
       } else {
         

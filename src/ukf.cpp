@@ -32,7 +32,7 @@ UKF::UKF() {
   std_a_ = 5;
 
   // Process noise standard deviation yaw acceleration in rad/s^2
-  std_yawdd_ = 1;
+  std_yawdd_ = 0.8;
 
   //------------------------------------------------------------------------//
 
@@ -70,8 +70,8 @@ UKF::UKF() {
   P_ <<   1., 0., 0., 0., 0.,
           0., 1., 0., 0., 0.,
           0., 0., 1., 0., 0.,
-          0., 0., 0., 1., 0.,
-          0., 0., 0., 0., 1.;
+          0., 0., 0., 0.5, 0.,
+          0., 0., 0., 0., 0.5;
 
 
   Xsig_pred_ = MatrixXd(n_x_, 2*n_aug_+1);
@@ -241,7 +241,7 @@ void UKF::Prediction(double delta_t) {
     double nu_a = x(5);
     double nu_p = x(6);
 
-    if (psi_dot > 0.001) {
+    if (fabs(psi_dot) > 0.001) {
       Xsig_pred_.col(i) << x(0) + (v / psi_dot) * ( sin(psi + psi_dot * delta_t) - sin(psi)) + 0.5 * delta_t2 * cos(psi) * nu_a,
                            x(1) + (v / psi_dot) * (-cos(psi + psi_dot * delta_t) + cos(psi)) + 0.5 * delta_t2 * sin(psi) * nu_a,
                            x(2) + 0 + delta_t * nu_a,
@@ -332,7 +332,6 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
   S(1, 1) = std_laspy_*std_laspy_;
   for(int i=0; i < (2*n_aug_ + 1); i++){
     VectorXd dz = Zsig.col(i)  - z_pred;
-
 
     S += weights_(i) * dz * dz.transpose();
   }
