@@ -30,6 +30,10 @@ int main()
 {
   uWS::Hub h;
 
+  // clear out_file
+  ofstream out_file("nis_output.dat");
+  out_file.close();
+
   // Create a Kalman Filter instance
   UKF ukf;
 
@@ -42,6 +46,8 @@ int main()
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
+
+    ofstream out_file("nis_output.dat", ios::app);
 
     if (length && length > 2 && data[0] == '4' && data[1] == '2')
     {
@@ -90,7 +96,7 @@ int main()
           		iss >> timestamp;
           		meas_package.timestamp_ = timestamp;
           }
-          float x_gt;
+        float x_gt;
     	  float y_gt;
     	  float vx_gt;
     	  float vy_gt;
@@ -137,16 +143,25 @@ int main()
           msgJson["rmse_vx"] = RMSE(2);
           msgJson["rmse_vy"] = RMSE(3);
           auto msg = "42[\"estimate_marker\"," + msgJson.dump() + "]";
-          // std::cout << msg << std::endl;
+          // std::cout << msg << std::endl;q
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
-	  
+          out_file << ukf.time_us_ << ",";
+          out_file << p_x << "," << p_y << ",";
+          out_file << yaw << "," << RMSE(0) << "," << RMSE(1) << "," << RMSE(2) << "," << RMSE(3) << ",";
+          if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
+            out_file << ukf.NIS_laser_ << "\n";
+          } else if (meas_package.sensor_type_ == MeasurementPackage::RADAR) {
+            out_file << ukf.NIS_radar_ << "\n";
+          }
         }
       } else {
         
         std::string msg = "42[\"manual\",{}]";
         ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
       }
+
     }
+    out_file.close();
 
   });
 
